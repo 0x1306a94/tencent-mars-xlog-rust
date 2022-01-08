@@ -8,3 +8,4 @@ edition = "2018"
 
 [dependencies]
 micro-uecc-safe = { path = "micro-uecc-safe", version = "*" }
+clap = { version = "3.0.5", features = ["derive"] }
