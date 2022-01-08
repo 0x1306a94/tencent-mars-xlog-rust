@@ -1,0 +1,3 @@
+[submodule "micro-uecc-safe/micro-uecc-sys/micro-uecc"]
+	path = micro-uecc-safe/micro-uecc-sys/micro-uecc
+	url = https://github.com/kmackay/micro-ecc

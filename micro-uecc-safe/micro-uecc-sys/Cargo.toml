@@ -1,0 +1,27 @@
+[package]
+name = "micro-uecc-sys"
+version = "1.0.0"
+build = "build.rs"
+authors = ["0x1306a94 <0x1306a94@gmail.com>"]
+edition = "2018"
+# links = "micro-uecc"
+repository = "https://github.com/kmackay/micro-ecc"
+
+include = [
+    "micro-uecc/LICENSE.txt",
+    "micro-uecc/*.h",
+    "micro-uecc/*.c",
+    "micro-uecc/*.inc",
+]
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+path = "src/lib.rs"
+
+[build-dependencies]
+bindgen = "0.59.2"
+cc = "1.0.68"
+
+[dependencies]
+
+

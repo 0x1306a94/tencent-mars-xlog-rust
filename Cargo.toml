@@ -1,0 +1,10 @@
+[package]
+name = "tencent-mars-xlog"
+version = "0.1.0"
+authors = ["0x1306a94 <0x1306a94@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+micro-uecc-safe = { path = "micro-uecc-safe", version = "*" }
