@@ -1,6 +1,6 @@
 use micro_uecc_sys;
 
-pub fn uecc_mkae_key_with_secp2561() -> Option<(String, String)> {
+pub fn uecc_mkae_key_with_secp2561k1() -> Option<(String, String)> {
     unsafe {
         let curve = micro_uecc_sys::uECC_secp256k1();
         let prlen = micro_uecc_sys::uECC_curve_private_key_size(curve) as usize;
@@ -34,7 +34,7 @@ mod tests {
     use super::*;
     #[test]
     fn gen_key_pair() {
-        match uecc_mkae_key_with_secp2561() {
+        match uecc_mkae_key_with_secp2561k1() {
             None => println!("生成失败"),
             Some((private_key, public_key)) => {
                 println!("private_key: {}", private_key);

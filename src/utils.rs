@@ -17,12 +17,17 @@ pub fn encode_hex(bytes: &[u8]) -> String {
     s
 }
 
-pub fn gen_key_pair() {
-    match micro_uecc_safe::uecc_mkae_key_with_secp2561() {
-        None => println!("生成失败"),
-        Some((private_key, public_key)) => {
-            println!("private_key: {}", private_key);
-            println!("public_key: {}", public_key);
-        }
-    };
+pub struct UEcckeyPair {
+    pub private_key: String,
+    pub public_key: String,
+}
+
+pub fn gen_key_pair() -> Option<UEcckeyPair> {
+    match micro_uecc_safe::uecc_mkae_key_with_secp2561k1() {
+        None => None,
+        Some((private_key, public_key)) => Some(UEcckeyPair {
+            private_key,
+            public_key,
+        }),
+    }
 }
