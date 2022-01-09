@@ -29,6 +29,27 @@ pub fn uecc_mkae_key_with_secp2561k1() -> Option<(String, String)> {
     }
 }
 
+pub fn ucc_shared_secret_whith_secp2561k1(
+    pub_key_buf: &mut [u8],
+    priv_key_buf: &mut [u8],
+    ecdh_buf: &mut [u8],
+) -> Option<()> {
+    unsafe {
+        let curve = micro_uecc_sys::uECC_secp256k1();
+        let ret = micro_uecc_sys::uECC_shared_secret(
+            &mut pub_key_buf[0],
+            &mut priv_key_buf[0],
+            &mut ecdh_buf[0],
+            curve,
+        );
+        if ret == 1 {
+            Some(())
+        } else {
+            None
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
