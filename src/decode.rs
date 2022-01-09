@@ -1,6 +1,5 @@
 use anyhow::{Error, Result};
-use compress::zlib;
-// use flate2::read::ZlibDecoder;
+use flate2::{bufread, Compression};
 use memmap::Mmap;
 use std::convert::TryInto;
 use std::error;
@@ -175,10 +174,10 @@ impl Context {
             let bytes = input_buf_file.read_range_bytes(*offset, buf_len);
             match get_log_start_pos(bytes, buf_len, 1) {
                 Some(pos) => {
-                    // output_buf_file.appen_str(&format!(
-                    //     "[F]decode_log_file.py decode err|| len= {:?}\n",
-                    //     pos
-                    // ));
+                    output_buf_file.appen_str(&format!(
+                        "[F]decode_log_file.py decode err|| len= {:?}\n",
+                        pos
+                    ));
                     *offset += pos;
                 }
                 None => {
@@ -205,10 +204,10 @@ impl Context {
         {
             crypt_key_len = 64
         } else {
-            // output_buf_file.appen_str(&format!(
-            //     "in DecodeBuffer _buffer[{:?}]:{:?} != NUM_START\n",
-            //     *offset, value
-            // ));
+            output_buf_file.appen_str(&format!(
+                "in DecodeBuffer _buffer[{:?}]:{:?} != NUM_START\n",
+                *offset, value
+            ));
             return Err(anyhow::anyhow!("无法获取 log start pos"));
         }
 
@@ -228,11 +227,11 @@ impl Context {
         let key = ((BASE_KEY as i32) ^ (0xff & (seq as i32)) ^ v);
 
         if seq != 0 && seq != 1 && self.last_seq != 0 && seq != (self.last_seq + 1) {
-            // output_buf_file.appen_str(&format!(
-            //     "[F]decode_log_file.py log seq:{:?}-{:?} is missing\n",
-            //     self.last_seq + 1,
-            //     seq - 1
-            // ));
+            output_buf_file.appen_str(&format!(
+                "[F]decode_log_file.py log seq:{:?}-{:?} is missing\n",
+                self.last_seq + 1,
+                seq - 1
+            ));
         }
 
         if seq != 0 {
@@ -247,9 +246,8 @@ impl Context {
         if self.private_key.len() > 0 {
             if magic::NO_COMPRESS_START1 == value || magic::SYNC_ZSTD_START == value {
                 // pass
-                // output_buf_file.appen_str("pass\n");
+                output_buf_file.appen_str("pass\n");
             } else if magic::COMPRESS_START2 == value || magic::ASYNC_ZSTD_START == value {
-                // println!("COMPRESS_START2: {:?}", *offset);
                 // 解密
                 let pos = *offset + header_len;
                 let len = length;
@@ -312,33 +310,24 @@ impl Context {
                         temp_buf[start + i * 4 + 2] = b2;
                         temp_buf[start + i * 4 + 3] = b1;
                     }
-                    output_buf_file.appen_str(&format!("0x{:08X} 0x{:08X}\n", tmp[0], tmp[1]));
+                    // output_buf_file.appen_str(&format!("0x{:08X} 0x{:08X}\n", tmp[0], tmp[1]));
                     // println!("0x{:08X} 0x{:08X}", tmp[0], tmp[1]);
                 }
                 println!("tea_decrypt");
 
                 if magic::COMPRESS_START2 == value {
                     // zlib
-                    // let mut s = String::new();
-                    // let mut d = ZlibDecoder::new(&temp_buf[..]);
-                    // match d.read_to_string(&mut s) {
-                    //     Ok(it) => {
-                    //         println!("zlib decompressed: {:?}", it);
-                    //     }
-                    //     Err(err) => {
-                    //         return Err(anyhow::Error::new(err));
-                    //     }
-                    // };
-                    // let mut s = String::new();
-                    // let mut d = zlib::Decoder::new(&temp_buf[..]);
-                    // match d.read_to_string(&mut s) {
-                    //     Ok(it) => {
-                    //         println!("zlib decompressed: {:?}", it);
-                    //     }
-                    //     Err(err) => {
-                    //         return Err(anyhow::Error::new(err));
-                    //     }
-                    // };
+                    let mut gz = bufread::DeflateDecoder::new(&temp_buf[..]);
+                    let mut s = String::new();
+                    match gz.read_to_string(&mut s) {
+                        Ok(it) => {
+                            println!("zlib decompressed: {:?}", it);
+                            output_buf_file.appen_str(&s);
+                        }
+                        Err(err) => {
+                            return Err(anyhow::Error::new(err));
+                        }
+                    };
                 } else {
                     // zstd
                 }
@@ -351,11 +340,10 @@ impl Context {
                 || magic::ASYNC_ZSTD_START == value
             {
                 println!("use wrong decode script");
-                // output_buf_file.appen_str("use wrong decode script\n");
+                output_buf_file.appen_str("use wrong decode script\n");
             }
         }
         // TODO: 暂时中断
-        // output_buf_file.appen_str(&format!("pos: {:?}\n", *offset + header_len + length + 1));
         return Ok(*offset + header_len + length + 1);
     }
 }
@@ -500,9 +488,9 @@ mod tests {
 
         let output = sample_data_path.join("encrypt_sample_data.xlog.log");
 
-        dotenv::from_filename(sample_data_path.join("custom.env").to_str().unwrap())
-            .ok()
-            .unwrap();
+        let env_path = sample_data_path.join("custom.env");
+        println!("env_path: {:?}", env_path);
+        dotenv::from_path(env_path.as_path()).ok().unwrap();
 
         let private_key = std::env::var("TEST_XLOG_PRIVATE_KEY").unwrap_or("".to_string());
         println!("private_key: {:?}", private_key);
