@@ -20,11 +20,10 @@ pub fn encode_hex(bytes: &[u8]) -> String {
 pub fn tea_decrypt(v: &mut [u32], k: &mut [u32]) {
     let mut v0 = v[0];
     let mut v1 = v[1];
-    let mut sum: u32 = 0;
     let delta: u32 = 0x9e3779b9;
-    let totalSum: u32 = 0x9e3779b9 << 4;
+    let total_sum: u32 = 0x9e3779b9 << 4;
 
-    sum = totalSum;
+     let mut sum: u32 = total_sum;
     let k0 = k[0];
     let k1 = k[1];
     let k2 = k[2];
