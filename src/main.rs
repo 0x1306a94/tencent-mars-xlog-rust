@@ -55,11 +55,6 @@ fn main() {
         } => {
             println!("input: {:?}", input);
             println!("output: {:?}", output);
-
-            match privateKey {
-                Some(key) => println!("privateKey: {:?}", key),
-                None => println!("None"),
-            }
         }
     }
 }

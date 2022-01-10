@@ -13,3 +13,5 @@ memmap = "0.7.0"
 anyhow = "1.0.52"
 dotenv = "0.15.0"
 flate2 = { version = "1.0.17", features = ["zlib"], default-features = false }
+zstd = "0.9"
+walkdir = "2"

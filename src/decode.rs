@@ -240,108 +240,167 @@ impl Context {
             self.last_seq = seq;
         }
 
-        let mut temp_buf: Vec<u8> = vec![0; length];
+        let pos = *offset + header_len;
+        let len = length;
+        let data = input_buf_file.read_range_bytes(pos, len);
+        let mut content_buf: Vec<u8> = vec![0; len];
+        content_buf.copy_from_slice(data);
+
         let input_buf = input_buf_file.all_bytes();
         let magic_value = input_buf[*offset];
 
-        if self.private_key.len() > 0 {
-            if magic::NO_COMPRESS_START1 == magic_value || magic::SYNC_ZSTD_START == magic_value {
-                // pass
-                output_buf_file.appen_str("pass\n")?;
-            } else if magic::COMPRESS_START2 == magic_value
-                || magic::ASYNC_ZSTD_START == magic_value
-            {
-                // 解密
-                let pos = *offset + header_len;
-                let len = length;
-                let data = input_buf_file.read_range_bytes(pos, len);
-                temp_buf.copy_from_slice(data);
-
-                let mut client_pub_key: Vec<u8> = vec![0; crypt_key_len];
-                let pos = *offset + header_len - crypt_key_len;
-                let len = crypt_key_len;
-                let data = input_buf_file.read_range_bytes(pos, len);
-                client_pub_key.copy_from_slice(data);
-
-                let mut svr_priate_key: Vec<u8> = vec![0];
-                if let Ok(decode) = utils::decode_hex(&self.private_key) {
-                    svr_priate_key = decode;
-                } else {
-                    return Err(anyhow::anyhow!("Get ECDH key error"));
-                }
-
-                let mut ecdh_buf = vec![0; 32];
-                if let None = micro_uecc_safe::ucc_shared_secret_whith_secp2561k1(
-                    &mut client_pub_key,
-                    &mut svr_priate_key,
-                    &mut ecdh_buf,
-                ) {
-                    return Err(anyhow::anyhow!("Get ECDH key error"));
-                }
-
-                let mut tea_key = vec![0; 4];
-                for i in 0..4 {
-                    let start = i * 4;
-                    let end = start + 4;
-                    let bytes = &ecdh_buf[start..end];
-                    let t1 = read_integer::<u32>(bytes);
-                    tea_key[i] = t1;
-                }
-
-                let tea_block_len = TEA_BLOCK_LEN as usize;
-                let cnt = length / tea_block_len;
-                for i in 0..cnt {
-                    let start = i * tea_block_len;
-                    let end = start + tea_block_len;
-
-                    let bytes = &temp_buf[start..end - 4];
-                    let t1 = read_integer::<u32>(bytes);
-                    let bytes = &temp_buf[start + 4..end];
-                    let t2 = read_integer::<u32>(bytes);
-                    let mut tmp = vec![t1, t2];
-
-                    utils::tea_decrypt(&mut tmp, &mut tea_key);
-
-                    for i in 0..2 {
-                        let x = tmp[i];
-                        let b1: u8 = ((x >> 24) & 0xff) as u8;
-                        let b2: u8 = ((x >> 16) & 0xff) as u8;
-                        let b3: u8 = ((x >> 8) & 0xff) as u8;
-                        let b4: u8 = (x & 0xff) as u8;
-                        temp_buf[start + i * 4] = b4;
-                        temp_buf[start + i * 4 + 1] = b3;
-                        temp_buf[start + i * 4 + 2] = b2;
-                        temp_buf[start + i * 4 + 3] = b1;
-                    }
-                    // output_buf_file.appen_str(&format!("0x{:08X} 0x{:08X}\n", tmp[0], tmp[1]));
-                    // println!("0x{:08X} 0x{:08X}", tmp[0], tmp[1]);
-                }
-
-                if magic::COMPRESS_START2 == magic_value {
-                    // zlib
-                    let mut gz = bufread::DeflateDecoder::new(&temp_buf[..]);
-                    let mut s = String::new();
-                    if let Err(err) = gz.read_to_string(&mut s) {
-                        return Err(anyhow::Error::new(err));
-                    } else {
-                        output_buf_file.appen_str(&s)?;
-                    };
-                } else {
-                    // zstd
-                }
-            } else if magic::ASYNC_NO_CRYPT_ZSTD_START == magic_value {
-            }
-        } else {
-            if magic::NO_COMPRESS_START1 == magic_value
+        let is_crypt = self.private_key.len() > 0;
+        if is_crypt
+            && (magic::NO_COMPRESS_START1 == magic_value || magic::SYNC_ZSTD_START == magic_value)
+        {
+            // pass
+            output_buf_file.appen_str("pass\n")?;
+        } else if !is_crypt
+            && (magic::NO_COMPRESS_START1 == magic_value
                 || magic::COMPRESS_START2 == magic_value
                 || magic::SYNC_ZSTD_START == magic_value
-                || magic::ASYNC_ZSTD_START == magic_value
-            {
-                output_buf_file.appen_str("use wrong decode script\n")?;
+                || magic::ASYNC_ZSTD_START == magic_value)
+        {
+            output_buf_file.appen_str("use wrong decode script\n")?;
+        } else if is_crypt
+            && (magic::COMPRESS_START2 == magic_value || magic::ASYNC_ZSTD_START == magic_value)
+        {
+            // 解密
+
+            let mut client_pub_key: Vec<u8> = vec![0; crypt_key_len];
+            let pos = *offset + header_len - crypt_key_len;
+            let len = crypt_key_len;
+            let data = input_buf_file.read_range_bytes(pos, len);
+            client_pub_key.copy_from_slice(data);
+
+            let mut svr_priate_key: Vec<u8> = vec![0];
+            if let Ok(decode) = utils::decode_hex(&self.private_key) {
+                svr_priate_key = decode;
+            } else {
+                return Err(anyhow::anyhow!("Get ECDH key error"));
+            }
+
+            let mut ecdh_buf = vec![0; 32];
+            if let None = micro_uecc_safe::ucc_shared_secret_whith_secp2561k1(
+                &mut client_pub_key,
+                &mut svr_priate_key,
+                &mut ecdh_buf,
+            ) {
+                return Err(anyhow::anyhow!("Get ECDH key error"));
+            }
+
+            let mut tea_key = vec![0; 4];
+            for i in 0..4 {
+                let start = i * 4;
+                let end = start + 4;
+                let bytes = &ecdh_buf[start..end];
+                let t1 = read_integer::<u32>(bytes);
+                tea_key[i] = t1;
+            }
+
+            let tea_block_len = TEA_BLOCK_LEN as usize;
+            let cnt = length / tea_block_len;
+            for i in 0..cnt {
+                let start = i * tea_block_len;
+                let end = start + tea_block_len;
+
+                let bytes = &content_buf[start..end - 4];
+                let t1 = read_integer::<u32>(bytes);
+                let bytes = &content_buf[start + 4..end];
+                let t2 = read_integer::<u32>(bytes);
+                let mut tmp = vec![t1, t2];
+
+                utils::tea_decrypt(&mut tmp, &mut tea_key);
+
+                for i in 0..2 {
+                    let x = tmp[i];
+                    let b1: u8 = ((x >> 24) & 0xff) as u8;
+                    let b2: u8 = ((x >> 16) & 0xff) as u8;
+                    let b3: u8 = ((x >> 8) & 0xff) as u8;
+                    let b4: u8 = (x & 0xff) as u8;
+                    content_buf[start + i * 4] = b4;
+                    content_buf[start + i * 4 + 1] = b3;
+                    content_buf[start + i * 4 + 2] = b2;
+                    content_buf[start + i * 4 + 3] = b1;
+                }
+                // output_buf_file.appen_str(&format!("0x{:08X} 0x{:08X}\n", tmp[0], tmp[1]));
+                // println!("0x{:08X} 0x{:08X}", tmp[0], tmp[1]);
+            }
+
+            if magic::COMPRESS_START2 == magic_value {
+                // zlib
+                self.zlib_decompress(output_buf_file, &content_buf)?;
+            } else {
+                // zstd
+                self.zstd_decompress(output_buf_file, &content_buf)?;
+            }
+        } else if magic::ASYNC_NO_CRYPT_ZSTD_START == magic_value {
+            // zstd
+            self.zstd_decompress(output_buf_file, &content_buf)?;
+        } else if magic::COMPRESS_START == magic_value
+            || magic::COMPRESS_NO_CRYPT_START == magic_value
+        {
+            // zlib
+            self.zlib_decompress(output_buf_file, &content_buf)?;
+        } else if magic::COMPRESS_START1 == magic_value {
+            if content_buf.len() > 0 {
+                let mut decompress_buf: Vec<u8> = Vec::with_capacity(1024);
+                let mut pos = 0;
+                let content_buf_len = content_buf.len();
+                while pos < content_buf_len {
+                    let single_log_len = read_integer::<u16>(&content_buf[pos..pos + 2]) as usize;
+                    pos += 2;
+                    let end = pos + single_log_len + 2;
+                    let rang_bytes = &content_buf[pos..end];
+                    pos = end;
+                    decompress_buf.extend_from_slice(rang_bytes);
+                }
+                // zlib
+                self.zlib_decompress(output_buf_file, &decompress_buf)?;
             }
         }
+
         // TODO: 暂时中断
         return Ok(*offset + header_len + length + 1);
+    }
+
+    fn zlib_decompress(
+        &self,
+        output_buf_file: &mut OutputBufFile,
+        content_buf: &[u8],
+    ) -> anyhow::Result<()> {
+        if content_buf.len() == 0 {
+            return Ok(());
+        }
+        let mut gz = bufread::DeflateDecoder::new(content_buf);
+        let mut s = String::new();
+        if let Err(err) = gz.read_to_string(&mut s) {
+            return Err(anyhow::Error::new(err));
+        } else {
+            output_buf_file.appen_str(&s)?;
+        };
+
+        Ok(())
+    }
+
+    fn zstd_decompress(
+        &self,
+        output_buf_file: &mut OutputBufFile,
+        content_buf: &[u8],
+    ) -> anyhow::Result<()> {
+        if content_buf.len() == 0 {
+            return Ok(());
+        }
+        match zstd::stream::decode_all(content_buf) {
+            Ok(decompress) => {
+                output_buf_file.appen_bytes(&decompress)?;
+            }
+            Err(e) => {
+                return Err(anyhow::Error::new(e));
+            }
+        }
+
+        Ok(())
     }
 }
 
@@ -458,17 +517,11 @@ fn get_log_start_pos(buf: &[u8], buf_len: usize, count: i8) -> Option<usize> {
 mod tests {
     use super::*;
 
-    use std::path::PathBuf;
-
-    #[test]
-    fn get_log_start_pos_test() {
-        let path = "/Users/king/Documents/test/imsdk_C_20220107.xlog";
-        let input_buf = InputBuffer::new(path).unwrap();
-        let bytes = input_buf.bytes();
-        let buf_len = input_buf.len();
-        let pos = get_log_start_pos(bytes, buf_len, 2).unwrap();
-        assert_eq!(pos, 0, "失败了");
-    }
+    use std::{
+        fs,
+        path::{Path, PathBuf},
+    };
+    use walkdir::WalkDir;
 
     #[test]
     fn decode_test() {
@@ -502,6 +555,70 @@ mod tests {
                     }
                 }
                 assert!(false, "{:?}", e.root_cause());
+            }
+        }
+    }
+
+    #[test]
+    fn decode_all_test() {
+        let pwd = std::env::var("PWD").unwrap();
+        println!("pwd: {:?}", pwd);
+        let sample_data_path = PathBuf::from(pwd).join("sample_data");
+        println!("sample_data_path: {:?}", sample_data_path);
+
+        let env_path = sample_data_path.join("custom.env");
+        println!("env_path: {:?}", env_path);
+        dotenv::from_path(env_path.as_path()).ok().unwrap();
+
+        for entry in WalkDir::new(sample_data_path) {
+            let entry = entry.unwrap();
+            let file_name = entry.file_name().to_str().unwrap();
+            if !file_name.starts_with("z") {
+                continue;
+            }
+
+            let pwd = std::env::var("PWD").unwrap();
+            let sample_data_path = PathBuf::from(pwd).join("sample_data");
+            let mut output = sample_data_path.join(file_name);
+            output.set_extension("xog.log");
+
+            let input_path = String::from(entry.path().to_str().unwrap());
+            let output_path = String::from(output.to_str().unwrap());
+
+            if file_name.contains("_crypt_") {
+                // 加密日志
+                let private_key = std::env::var("TEST_XLOG_PRIVATE_KEY").unwrap_or("".to_string());
+                println!("private_key: {:?}", private_key);
+                let mut ctx = Context::new(input_path, output_path, private_key);
+                match ctx.decode() {
+                    Ok(_) => println!("成功"),
+                    Err(e) => {
+                        for cause in e.chain() {
+                            if let Some(io_error) = cause.downcast_ref::<io::Error>() {
+                                if io_error.kind() == io::ErrorKind::UnexpectedEof {
+                                    continue;
+                                }
+                            }
+                        }
+                        // assert!(false, "{:?}", e.root_cause());
+                    }
+                }
+            } else {
+                // 未加密日志
+                let mut ctx = Context::new(input_path, output_path, String::new());
+                match ctx.decode() {
+                    Ok(_) => println!("成功"),
+                    Err(e) => {
+                        for cause in e.chain() {
+                            if let Some(io_error) = cause.downcast_ref::<io::Error>() {
+                                if io_error.kind() == io::ErrorKind::UnexpectedEof {
+                                    continue;
+                                }
+                            }
+                        }
+                        // assert!(false, "{:?}", e.root_cause());
+                    }
+                }
             }
         }
     }
