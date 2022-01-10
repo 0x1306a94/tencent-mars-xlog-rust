@@ -23,7 +23,7 @@ pub fn tea_decrypt(v: &mut [u32], k: &mut [u32]) {
     let delta: u32 = 0x9e3779b9;
     let total_sum: u32 = 0x9e3779b9 << 4;
 
-     let mut sum: u32 = total_sum;
+    let mut sum: u32 = total_sum;
     let k0 = k[0];
     let k1 = k[1];
     let k2 = k[2];
