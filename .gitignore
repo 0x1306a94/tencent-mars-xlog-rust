@@ -123,3 +123,4 @@ Cargo.lock
 # End of https://www.toptal.com/developers/gitignore/api/macos,rust,c,c++
 
 sample_data/*.log
+test_build_out/
