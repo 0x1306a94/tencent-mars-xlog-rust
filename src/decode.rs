@@ -7,7 +7,54 @@ use std::io;
 use std::io::prelude::*;
 use std::io::Write;
 
-use crate::utils;
+mod utils {
+    use std::{fmt::Write, num::ParseIntError};
+
+    use micro_uecc_safe;
+
+    pub fn decode_hex(s: &str) -> Result<Vec<u8>, ParseIntError> {
+        (0..s.len())
+            .step_by(2)
+            .map(|i| u8::from_str_radix(&s[i..i + 2], 16))
+            .collect()
+    }
+
+    pub fn encode_hex(bytes: &[u8]) -> String {
+        let mut s = String::with_capacity(bytes.len() * 2);
+        for &b in bytes {
+            write!(&mut s, "{:02x}", b).unwrap();
+        }
+        s
+    }
+
+    pub fn tea_decrypt(v: &mut [u32], k: &mut [u32]) {
+        let mut v0 = v[0];
+        let mut v1 = v[1];
+        let delta: u32 = 0x9e3779b9;
+        let total_sum: u32 = 0x9e3779b9 << 4;
+
+        let mut sum: u32 = total_sum;
+        let k0 = k[0];
+        let k1 = k[1];
+        let k2 = k[2];
+        let k3 = k[3];
+        for _ in 0..16 {
+            let t1 = ((v0 << 4).wrapping_add(k2))
+                ^ (v0.wrapping_add(sum))
+                ^ ((v0 >> 5).wrapping_add(k3));
+            v1 = v1.wrapping_sub(t1);
+
+            let t0 = ((v1 << 4).wrapping_add(k0))
+                ^ (v1.wrapping_add(sum))
+                ^ ((v1 >> 5).wrapping_add(k1));
+            v0 = v0.wrapping_sub(t0);
+
+            sum = sum.wrapping_sub(delta);
+        }
+        v[0] = v0;
+        v[1] = v1;
+    }
+}
 
 pub trait ReadInteger<T> {
     fn from_le_bytes(data: &[u8]) -> T;
@@ -547,10 +594,16 @@ mod tests {
         match ctx.decode() {
             Ok(_) => println!("成功"),
             Err(e) => {
+                let root_cause = e.root_cause();
+                if let Some(io_error) = root_cause.downcast_ref::<io::Error>() {
+                    if io_error.kind() == io::ErrorKind::UnexpectedEof {
+                        return;
+                    }
+                }
                 for cause in e.chain() {
                     if let Some(io_error) = cause.downcast_ref::<io::Error>() {
                         if io_error.kind() == io::ErrorKind::UnexpectedEof {
-                            return;
+                            continue;
                         }
                     }
                 }
@@ -593,6 +646,12 @@ mod tests {
                 match ctx.decode() {
                     Ok(_) => println!("成功"),
                     Err(e) => {
+                        let root_cause = e.root_cause();
+                        if let Some(io_error) = root_cause.downcast_ref::<io::Error>() {
+                            if io_error.kind() == io::ErrorKind::UnexpectedEof {
+                                return;
+                            }
+                        }
                         for cause in e.chain() {
                             if let Some(io_error) = cause.downcast_ref::<io::Error>() {
                                 if io_error.kind() == io::ErrorKind::UnexpectedEof {
@@ -600,7 +659,7 @@ mod tests {
                                 }
                             }
                         }
-                        // assert!(false, "{:?}", e.root_cause());
+                        assert!(false, "{:?}", e.root_cause());
                     }
                 }
             } else {
@@ -609,6 +668,12 @@ mod tests {
                 match ctx.decode() {
                     Ok(_) => println!("成功"),
                     Err(e) => {
+                        let root_cause = e.root_cause();
+                        if let Some(io_error) = root_cause.downcast_ref::<io::Error>() {
+                            if io_error.kind() == io::ErrorKind::UnexpectedEof {
+                                return;
+                            }
+                        }
                         for cause in e.chain() {
                             if let Some(io_error) = cause.downcast_ref::<io::Error>() {
                                 if io_error.kind() == io::ErrorKind::UnexpectedEof {
@@ -616,7 +681,7 @@ mod tests {
                                 }
                             }
                         }
-                        // assert!(false, "{:?}", e.root_cause());
+                        assert!(false, "{:?}", e.root_cause());
                     }
                 }
             }

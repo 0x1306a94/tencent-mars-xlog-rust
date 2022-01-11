@@ -50,11 +50,26 @@ pub fn ucc_shared_secret_whith_secp2561k1(
     }
 }
 
+pub struct UEcckeyPair {
+    pub private_key: String,
+    pub public_key: String,
+}
+
+pub fn gen_secp2561k1_key_pair() -> Option<UEcckeyPair> {
+    match uecc_mkae_key_with_secp2561k1() {
+        None => None,
+        Some((private_key, public_key)) => Some(UEcckeyPair {
+            private_key,
+            public_key,
+        }),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test]
-    fn gen_key_pair() {
+    fn gen_secp2561k1_key_pair() {
         match uecc_mkae_key_with_secp2561k1() {
             None => println!("生成失败"),
             Some((private_key, public_key)) => {
