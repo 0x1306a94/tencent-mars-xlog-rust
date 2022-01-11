@@ -1,6 +1,8 @@
 use clap::{AppSettings, Parser, Subcommand};
+use std::env;
+use std::fs;
 use std::io;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use walkdir::WalkDir;
 
 use micro_uecc_safe;
@@ -37,6 +39,10 @@ enum Commands {
     },
 }
 
+pub fn absolute_path(path: impl AsRef<Path>) -> io::Result<PathBuf> {
+    return fs::canonicalize(path);
+}
+
 impl Cli {
     fn decode_single_file(&self, input: &PathBuf, output: &PathBuf, private_key: String) {
         let input_path = String::from(input.to_str().unwrap());
@@ -65,7 +71,8 @@ impl Cli {
                 }
             }
         }
-        std::panic::panic_any(e);
+        // std::panic::panic_any(e);
+        println!("{:?}", e);
     }
 }
 
@@ -85,29 +92,31 @@ impl Cli {
                 output,
                 privateKey,
             } => {
-                println!("input: {:?}", input);
-                println!("output: {:?}", output);
+                let input_path_buf = absolute_path(input).unwrap();
+                let out_path_buf = absolute_path(output).unwrap();
+                println!("input: {:?}", input_path_buf);
+                println!("output: {:?}", out_path_buf);
 
-                if input.is_file() {
+                if input_path_buf.is_file() {
                     let mut private_key = String::new();
                     if let Some(key) = privateKey {
                         private_key.push_str(key);
                     }
 
-                    self.decode_single_file(input, output, private_key);
+                    self.decode_single_file(&input_path_buf, &out_path_buf, private_key);
                     return;
                 } else {
-                    for entry in WalkDir::new(input.as_path()) {
+                    for entry in WalkDir::new(input_path_buf.as_path()) {
                         let entry = entry.unwrap();
                         let path = entry.path();
                         let input_path = PathBuf::from(entry.path());
-
+                        println!("input: {:?}", input_path);
                         let mut private_key = String::new();
                         if let Some(key) = privateKey {
                             private_key.push_str(key);
                         }
 
-                        self.decode_single_file(&input_path, output, private_key);
+                        self.decode_single_file(&input_path, &out_path_buf, private_key);
                     }
                 }
             }
