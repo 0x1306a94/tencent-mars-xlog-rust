@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3C284F02278E674E0091DCB6 /* mars.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C284F01278E674E0091DCB6 /* mars.xcframework */; };
 		3C2FA9E9278BFD3F008338E1 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C2FA9E8278BFD3F008338E1 /* AppDelegate.m */; };
 		3C2FA9EC278BFD3F008338E1 /* SceneDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C2FA9EB278BFD3F008338E1 /* SceneDelegate.m */; };
 		3C2FA9EF278BFD3F008338E1 /* ViewController.mm in Sources */ = {isa = PBXBuildFile; fileRef = 3C2FA9EE278BFD3F008338E1 /* ViewController.mm */; };
@@ -14,13 +15,13 @@
 		3C2FA9F4278BFD3F008338E1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 3C2FA9F3278BFD3F008338E1 /* Assets.xcassets */; };
 		3C2FA9F7278BFD3F008338E1 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3C2FA9F5278BFD3F008338E1 /* LaunchScreen.storyboard */; };
 		3C2FA9FA278BFD3F008338E1 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C2FA9F9278BFD3F008338E1 /* main.m */; };
-		3C2FAA01278BFD4B008338E1 /* mars.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C2FAA00278BFD4B008338E1 /* mars.framework */; };
 		3C2FAA05278C1AD8008338E1 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C2FAA03278C1AC8008338E1 /* libz.tbd */; };
 		3C2FAA06278C1ADD008338E1 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C2FAA04278C1ACF008338E1 /* libc++.tbd */; };
 		3C2FAA08278C1AEB008338E1 /* libresolv.9.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C2FAA07278C1AE3008338E1 /* libresolv.9.tbd */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		3C284F01278E674E0091DCB6 /* mars.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = mars.xcframework; sourceTree = "<group>"; };
 		3C2FA9E4278BFD3F008338E1 /* ios_xlog_sample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ios_xlog_sample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3C2FA9E7278BFD3F008338E1 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		3C2FA9E8278BFD3F008338E1 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -33,7 +34,6 @@
 		3C2FA9F6278BFD3F008338E1 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		3C2FA9F8278BFD3F008338E1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		3C2FA9F9278BFD3F008338E1 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
-		3C2FAA00278BFD4B008338E1 /* mars.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = mars.framework; sourceTree = "<group>"; };
 		3C2FAA03278C1AC8008338E1 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		3C2FAA04278C1ACF008338E1 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
 		3C2FAA07278C1AE3008338E1 /* libresolv.9.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libresolv.9.tbd; path = usr/lib/libresolv.9.tbd; sourceTree = SDKROOT; };
@@ -46,7 +46,7 @@
 			files = (
 				3C2FAA08278C1AEB008338E1 /* libresolv.9.tbd in Frameworks */,
 				3C2FAA06278C1ADD008338E1 /* libc++.tbd in Frameworks */,
-				3C2FAA01278BFD4B008338E1 /* mars.framework in Frameworks */,
+				3C284F02278E674E0091DCB6 /* mars.xcframework in Frameworks */,
 				3C2FAA05278C1AD8008338E1 /* libz.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -74,7 +74,7 @@
 		3C2FA9E6278BFD3F008338E1 /* ios_xlog_sample */ = {
 			isa = PBXGroup;
 			children = (
-				3C2FAA00278BFD4B008338E1 /* mars.framework */,
+				3C284F01278E674E0091DCB6 /* mars.xcframework */,
 				3C2FA9E7278BFD3F008338E1 /* AppDelegate.h */,
 				3C2FA9E8278BFD3F008338E1 /* AppDelegate.m */,
 				3C2FA9EA278BFD3F008338E1 /* SceneDelegate.h */,

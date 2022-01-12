@@ -15,6 +15,7 @@
 
 #import <mars/xlog/xlogger_interface.h>
 
+using namespace  mars::xlog;
 @interface ViewController ()
 
 @end
