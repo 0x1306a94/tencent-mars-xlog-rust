@@ -91,6 +91,8 @@ mod magic {
     pub const COMPRESS_START2: u8 = 0x07;
     pub const COMPRESS_NO_CRYPT_START: u8 = 0x09;
 
+    pub const SYNC_ZLIB_START: u8 = 0x06;
+    pub const SYNC_NO_CRYPT_ZLIB_START: u8 = 0x08;
     pub const SYNC_ZSTD_START: u8 = 0x0A;
     pub const SYNC_NO_CRYPT_ZSTD_START: u8 = 0x0B;
     pub const ASYNC_ZSTD_START: u8 = 0x0C;
@@ -298,10 +300,12 @@ impl Context {
 
         let is_crypt = self.private_key.len() > 0;
         if is_crypt
-            && (magic::NO_COMPRESS_START1 == magic_value || magic::SYNC_ZSTD_START == magic_value)
+            && (magic::SYNC_ZLIB_START == magic_value
+                || magic::SYNC_NO_CRYPT_ZLIB_START == magic_value
+                || magic::SYNC_ZSTD_START == magic_value
+                || magic::SYNC_NO_CRYPT_ZSTD_START == magic_value)
         {
-            // pass
-            output_buf_file.appen_str("pass\n")?;
+            output_buf_file.appen_bytes(&content_buf)?;
         } else if !is_crypt
             && (magic::NO_COMPRESS_START1 == magic_value
                 || magic::COMPRESS_START2 == magic_value
