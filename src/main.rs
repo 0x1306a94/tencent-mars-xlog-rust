@@ -1,13 +1,12 @@
 use clap::{AppSettings, Parser, Subcommand};
-use std::env;
-use std::fs;
+use path_absolutize::*;
 use std::io;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use walkdir::WalkDir;
 
 use micro_uecc_safe;
 mod decode;
-/// A fictional versioning CLI
+/// tencent-mars-xlog-util CLI
 #[derive(Parser)]
 #[clap(name = "tencent-mars-xlog-util")]
 #[clap(about = "tencent-mars-xlog-util")]
@@ -38,10 +37,6 @@ enum Commands {
         #[clap(short, long)]
         privateKey: Option<String>,
     },
-}
-
-pub fn absolute_path(path: impl AsRef<Path>) -> io::Result<PathBuf> {
-    return fs::canonicalize(path);
 }
 
 impl Cli {
@@ -93,8 +88,8 @@ impl Cli {
                 output,
                 privateKey,
             } => {
-                let input_path_buf = absolute_path(input).unwrap();
-                let out_path_buf = absolute_path(output).unwrap();
+                let input_path_buf = input.absolutize().unwrap().to_path_buf();
+                let out_path_buf = output.absolutize().unwrap().to_path_buf();
                 println!("input: {:?}", input_path_buf);
                 println!("output: {:?}", out_path_buf);
 
@@ -109,7 +104,6 @@ impl Cli {
                 } else {
                     for entry in WalkDir::new(input_path_buf.as_path()) {
                         let entry = entry.unwrap();
-                        let path = entry.path();
                         let input_path = PathBuf::from(entry.path());
                         println!("input: {:?}", input_path);
                         let mut private_key = String::new();
@@ -124,7 +118,6 @@ impl Cli {
         }
     }
 }
-
 fn main() {
     let args = Cli::parse();
     args.execute();

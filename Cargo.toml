@@ -15,6 +15,7 @@ dotenv = "0.15.0"
 flate2 = { version = "1.0.17", features = ["zlib"], default-features = false }
 zstd = "0.9"
 walkdir = "2"
+path-absolutize = "3.0.11"
 
 [[bin]]
 name = "tencent-mars-xlog-util"
