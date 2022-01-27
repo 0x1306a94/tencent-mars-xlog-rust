@@ -9,8 +9,9 @@ use micro_uecc_safe;
 mod decode;
 /// A fictional versioning CLI
 #[derive(Parser)]
-#[clap(name = "tencent-mars-xlog")]
-#[clap(about = "tencent-mars-xlog CLI")]
+#[clap(name = "tencent-mars-xlog-util")]
+#[clap(about = "tencent-mars-xlog-util")]
+#[clap(author, version, long_about = None)]
 pub struct Cli {
     #[clap(subcommand)]
     command: Commands,
