@@ -30,7 +30,7 @@ elif [ "$1" == "--out" ]; then
     mkdir -p $2
     lipo -create -output $2/$OUT_NAME ./target/$MAC_X86_TARGET/release/$OUT_NAME ./target/$MAC_ARM64_TARGET/release/$OUT_NAME
     cd $2
-    zip -q -o "${OUT_NAME}-universal-binaries.zip" $OUT_NAME
+    zip -q -o "${OUT_NAME}-macos-universal-binaries.zip" $OUT_NAME
     cd $CUR_DIR
 fi
 
