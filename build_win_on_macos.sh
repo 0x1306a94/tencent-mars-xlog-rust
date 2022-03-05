@@ -8,6 +8,7 @@ OUT_NAME=tencent-mars-xlog-util
 # rustup target add x86_64-pc-windows-gnu
 # brew install mingw-w64
 
+VERSION="v0.1.2"
 CUR_DIR=$PWD
 
 function useage() {
@@ -31,7 +32,7 @@ elif [ "$1" == "--out" ]; then
     echo $CUR_DIR
     cp ./target/$WIN_TARGET/release/$OUT_NAME.exe $2/$OUT_NAME.exe
     cd $2
-    zip -q -o "${OUT_NAME}-win-x86_64-binaries.zip" $OUT_NAME.exe
+    zip -q -o "${OUT_NAME}-win-x86_64-${VERSION}-binaries.zip" $OUT_NAME.exe
     cd $CUR_DIR
 
 fi

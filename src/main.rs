@@ -104,8 +104,11 @@ impl Cli {
                 } else {
                     for entry in WalkDir::new(input_path_buf.as_path()) {
                         let entry = entry.unwrap();
+                        if entry.path().is_dir() || entry.path().ends_with(".DS_Store") {
+                            continue;
+                        }
                         let input_path = PathBuf::from(entry.path());
-                        println!("input: {:?}", input_path);
+                        println!("decode: {:?}", input_path);
                         let mut private_key = String::new();
                         if let Some(key) = privateKey {
                             private_key.push_str(key);
