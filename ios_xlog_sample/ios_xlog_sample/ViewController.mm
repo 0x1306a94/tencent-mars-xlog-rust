@@ -15,9 +15,12 @@
 
 #import <mars/xlog/xlogger_interface.h>
 
-using namespace  mars::xlog;
-@interface ViewController ()
+#import "LogViewController.h"
+#import "XlogDecoder.h"
 
+using namespace mars::xlog;
+@interface ViewController ()
+@property (nonatomic, strong) NSDateFormatter *dateFormatter;
 @end
 
 @implementation ViewController
@@ -125,6 +128,9 @@ void wirte_log(std::string body) {
 - (void)viewDidLoad {
     [super viewDidLoad];
     // Do any additional setup after loading the view.
+    self.dateFormatter = [[NSDateFormatter alloc] init];
+    self.dateFormatter.dateFormat = @"yyyyMMdd";
+
     setupLog();
 }
 
@@ -139,6 +145,30 @@ void wirte_log(std::string body) {
         }
         mars::xlog::Flush(uintptr_t(logger), true);
     }
+}
+
+- (IBAction)decodeAction:(id)sender {
+    NSString *dirName = @"test_xlog";
+    NSString *logPath = [[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES) objectAtIndex:0] stringByAppendingPathComponent:dirName];
+
+    NSLog(@"%@", logPath);
+
+    NSString *nameprefix = @"zstd_sync_crypt";
+    NSString *time = [self.dateFormatter stringFromDate:[NSDate new]];
+    NSString *logFileName = [NSString stringWithFormat:@"%@_%@.xlog", nameprefix, time];
+
+    // 输出文件名格式为 {nameprefix_}_{yyyyMMdd}.xlog
+    NSString *inPath = [logPath stringByAppendingPathComponent:logFileName];
+    XlogDecoder *decoder = [[XlogDecoder alloc] init];
+    NSString *outPath = [logPath stringByAppendingPathComponent:[NSString stringWithFormat:@"%@.log", logFileName]];
+    BOOL succeed = [decoder decodeAtPath:inPath privateKey:[NSString stringWithUTF8String:private_key] outPath:outPath];
+    if (!succeed) {
+        NSLog(@"解码失败");
+        return;
+    }
+
+    LogViewController *vc = [[LogViewController alloc] initWithLogPath:outPath];
+    [self presentViewController:vc animated:YES completion:nil];
 }
 
 - (void)touchesBegan:(NSSet<UITouch *> *)touches withEvent:(UIEvent *)event {

@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3C2253B12795099200241450 /* LogViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C2253AF2795099200241450 /* LogViewController.m */; };
+		3C2253B22795099200241450 /* LogViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 3C2253B02795099200241450 /* LogViewController.xib */; };
 		3C284F02278E674E0091DCB6 /* mars.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C284F01278E674E0091DCB6 /* mars.xcframework */; };
 		3C2FA9E9278BFD3F008338E1 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C2FA9E8278BFD3F008338E1 /* AppDelegate.m */; };
 		3C2FA9EC278BFD3F008338E1 /* SceneDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C2FA9EB278BFD3F008338E1 /* SceneDelegate.m */; };
@@ -18,9 +20,13 @@
 		3C2FAA05278C1AD8008338E1 /* libz.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C2FAA03278C1AC8008338E1 /* libz.tbd */; };
 		3C2FAA06278C1ADD008338E1 /* libc++.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C2FAA04278C1ACF008338E1 /* libc++.tbd */; };
 		3C2FAA08278C1AEB008338E1 /* libresolv.9.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 3C2FAA07278C1AE3008338E1 /* libresolv.9.tbd */; };
+		3C4729A82792A9D200B393AF /* XlogDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 3C4729A72792A9D200B393AF /* XlogDecoder.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		3C2253AE2795099200241450 /* LogViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LogViewController.h; sourceTree = "<group>"; };
+		3C2253AF2795099200241450 /* LogViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LogViewController.m; sourceTree = "<group>"; };
+		3C2253B02795099200241450 /* LogViewController.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = LogViewController.xib; sourceTree = "<group>"; };
 		3C284F01278E674E0091DCB6 /* mars.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; path = mars.xcframework; sourceTree = "<group>"; };
 		3C2FA9E4278BFD3F008338E1 /* ios_xlog_sample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ios_xlog_sample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3C2FA9E7278BFD3F008338E1 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -37,6 +43,8 @@
 		3C2FAA03278C1AC8008338E1 /* libz.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libz.tbd; path = usr/lib/libz.tbd; sourceTree = SDKROOT; };
 		3C2FAA04278C1ACF008338E1 /* libc++.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = "libc++.tbd"; path = "usr/lib/libc++.tbd"; sourceTree = SDKROOT; };
 		3C2FAA07278C1AE3008338E1 /* libresolv.9.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libresolv.9.tbd; path = usr/lib/libresolv.9.tbd; sourceTree = SDKROOT; };
+		3C4729A62792A9D200B393AF /* XlogDecoder.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = XlogDecoder.h; sourceTree = "<group>"; };
+		3C4729A72792A9D200B393AF /* XlogDecoder.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = XlogDecoder.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -81,6 +89,11 @@
 				3C2FA9EB278BFD3F008338E1 /* SceneDelegate.m */,
 				3C2FA9ED278BFD3F008338E1 /* ViewController.h */,
 				3C2FA9EE278BFD3F008338E1 /* ViewController.mm */,
+				3C4729A62792A9D200B393AF /* XlogDecoder.h */,
+				3C4729A72792A9D200B393AF /* XlogDecoder.m */,
+				3C2253AE2795099200241450 /* LogViewController.h */,
+				3C2253AF2795099200241450 /* LogViewController.m */,
+				3C2253B02795099200241450 /* LogViewController.xib */,
 				3C2FA9F0278BFD3F008338E1 /* Main.storyboard */,
 				3C2FA9F3278BFD3F008338E1 /* Assets.xcassets */,
 				3C2FA9F5278BFD3F008338E1 /* LaunchScreen.storyboard */,
@@ -160,6 +173,7 @@
 				3C2FA9F7278BFD3F008338E1 /* LaunchScreen.storyboard in Resources */,
 				3C2FA9F4278BFD3F008338E1 /* Assets.xcassets in Resources */,
 				3C2FA9F2278BFD3F008338E1 /* Main.storyboard in Resources */,
+				3C2253B22795099200241450 /* LogViewController.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -173,7 +187,9 @@
 				3C2FA9EF278BFD3F008338E1 /* ViewController.mm in Sources */,
 				3C2FA9E9278BFD3F008338E1 /* AppDelegate.m in Sources */,
 				3C2FA9FA278BFD3F008338E1 /* main.m in Sources */,
+				3C4729A82792A9D200B393AF /* XlogDecoder.m in Sources */,
 				3C2FA9EC278BFD3F008338E1 /* SceneDelegate.m in Sources */,
+				3C2253B12795099200241450 /* LogViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

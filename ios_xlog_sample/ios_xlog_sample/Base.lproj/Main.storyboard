@@ -17,25 +17,35 @@
                         <rect key="frame" x="0.0" y="0.0" width="414" height="896"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="To9-cq-Yef">
-                                <rect key="frame" x="177" y="418" width="60" height="60"/>
-                                <color key="backgroundColor" systemColor="systemRedColor"/>
-                                <constraints>
-                                    <constraint firstAttribute="height" constant="60" id="r69-lj-05q"/>
-                                    <constraint firstAttribute="width" constant="60" id="wlc-pB-pgv"/>
-                                </constraints>
-                                <state key="normal" title="Button"/>
-                                <buttonConfiguration key="configuration" style="plain" title="Flush"/>
-                                <connections>
-                                    <action selector="flushAction:" destination="BYZ-38-t0r" eventType="touchUpInside" id="rb6-5h-51U"/>
-                                </connections>
-                            </button>
+                            <stackView opaque="NO" contentMode="scaleToFill" spacing="16" translatesAutoresizingMaskIntoConstraints="NO" id="yF1-Pv-cC7">
+                                <rect key="frame" x="140" y="432.5" width="134" height="31"/>
+                                <subviews>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="To9-cq-Yef">
+                                        <rect key="frame" x="0.0" y="0.0" width="59" height="31"/>
+                                        <color key="backgroundColor" systemColor="systemRedColor"/>
+                                        <state key="normal" title="Button"/>
+                                        <buttonConfiguration key="configuration" style="plain" title="Flush"/>
+                                        <connections>
+                                            <action selector="flushAction:" destination="BYZ-38-t0r" eventType="touchUpInside" id="rb6-5h-51U"/>
+                                        </connections>
+                                    </button>
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Uhi-UB-LEn">
+                                        <rect key="frame" x="75" y="0.0" width="59" height="31"/>
+                                        <color key="backgroundColor" systemColor="systemRedColor"/>
+                                        <state key="normal" title="Button"/>
+                                        <buttonConfiguration key="configuration" style="plain" title="解码"/>
+                                        <connections>
+                                            <action selector="decodeAction:" destination="BYZ-38-t0r" eventType="touchUpInside" id="aZC-l6-R1Y"/>
+                                        </connections>
+                                    </button>
+                                </subviews>
+                            </stackView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
-                            <constraint firstItem="To9-cq-Yef" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="Xdw-24-JJu"/>
-                            <constraint firstItem="To9-cq-Yef" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="mEd-Gq-6Ic"/>
+                            <constraint firstItem="yF1-Pv-cC7" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="3ia-Fh-zWs"/>
+                            <constraint firstItem="yF1-Pv-cC7" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="Vqs-vG-vSG"/>
                         </constraints>
                     </view>
                 </viewController>
