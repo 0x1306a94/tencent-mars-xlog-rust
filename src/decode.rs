@@ -484,6 +484,12 @@ impl Context {
                     start_pos = pos;
                 }
                 Err(e) => {
+                    let root_cause = e.root_cause();
+                    if let Some(io_error) = root_cause.downcast_ref::<io::Error>() {
+                        if io_error.kind() == io::ErrorKind::UnexpectedEof {
+                            return Ok(());
+                        }
+                    }
                     return Err(e);
                 }
             }
@@ -569,10 +575,7 @@ fn get_log_start_pos(buf: &[u8], buf_len: usize, count: i8) -> Option<usize> {
 mod tests {
     use super::*;
 
-    use std::{
-        fs,
-        path::{Path, PathBuf},
-    };
+    use std::path::PathBuf;
     use walkdir::WalkDir;
 
     #[test]
@@ -599,19 +602,6 @@ mod tests {
         match ctx.decode() {
             Ok(_) => println!("成功"),
             Err(e) => {
-                let root_cause = e.root_cause();
-                if let Some(io_error) = root_cause.downcast_ref::<io::Error>() {
-                    if io_error.kind() == io::ErrorKind::UnexpectedEof {
-                        return;
-                    }
-                }
-                for cause in e.chain() {
-                    if let Some(io_error) = cause.downcast_ref::<io::Error>() {
-                        if io_error.kind() == io::ErrorKind::UnexpectedEof {
-                            continue;
-                        }
-                    }
-                }
                 assert!(false, "{:?}", e.root_cause());
             }
         }
@@ -630,19 +620,28 @@ mod tests {
 
         for entry in WalkDir::new(sample_data_path) {
             let entry = entry.unwrap();
+            if entry.path().is_dir() {
+                continue;
+            }
+
             let file_name = entry.file_name().to_str().unwrap();
-            if !file_name.starts_with("z") {
+
+            let extension = entry.path().extension().unwrap().to_str();
+
+            if !file_name.starts_with("z") || extension != Some("xlog") {
                 continue;
             }
 
             let pwd = std::env::var("PWD").unwrap();
             let sample_data_path = PathBuf::from(pwd).join("sample_data");
             let mut output = sample_data_path.join(file_name);
-            output.set_extension("xog.log");
+            output.set_extension("xlog.log");
 
             let input_path = String::from(entry.path().to_str().unwrap());
             let output_path = String::from(output.to_str().unwrap());
 
+            println!("input_path: {:?}", input_path);
+            println!("output_path: {:?}", output_path);
             if file_name.contains("_crypt_") {
                 // 加密日志
                 let private_key = std::env::var("TEST_XLOG_PRIVATE_KEY").unwrap_or("".to_string());
@@ -651,19 +650,6 @@ mod tests {
                 match ctx.decode() {
                     Ok(_) => println!("成功"),
                     Err(e) => {
-                        let root_cause = e.root_cause();
-                        if let Some(io_error) = root_cause.downcast_ref::<io::Error>() {
-                            if io_error.kind() == io::ErrorKind::UnexpectedEof {
-                                return;
-                            }
-                        }
-                        for cause in e.chain() {
-                            if let Some(io_error) = cause.downcast_ref::<io::Error>() {
-                                if io_error.kind() == io::ErrorKind::UnexpectedEof {
-                                    continue;
-                                }
-                            }
-                        }
                         assert!(false, "{:?}", e.root_cause());
                     }
                 }
@@ -673,19 +659,6 @@ mod tests {
                 match ctx.decode() {
                     Ok(_) => println!("成功"),
                     Err(e) => {
-                        let root_cause = e.root_cause();
-                        if let Some(io_error) = root_cause.downcast_ref::<io::Error>() {
-                            if io_error.kind() == io::ErrorKind::UnexpectedEof {
-                                return;
-                            }
-                        }
-                        for cause in e.chain() {
-                            if let Some(io_error) = cause.downcast_ref::<io::Error>() {
-                                if io_error.kind() == io::ErrorKind::UnexpectedEof {
-                                    continue;
-                                }
-                            }
-                        }
                         assert!(false, "{:?}", e.root_cause());
                     }
                 }

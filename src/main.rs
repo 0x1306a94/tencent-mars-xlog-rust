@@ -54,19 +54,6 @@ impl Cli {
             Err(it) => it,
             _ => return,
         };
-        let root_cause = e.root_cause();
-        if let Some(io_error) = root_cause.downcast_ref::<io::Error>() {
-            if io_error.kind() == io::ErrorKind::UnexpectedEof {
-                return;
-            }
-        }
-        for cause in e.chain() {
-            if let Some(io_error) = cause.downcast_ref::<io::Error>() {
-                if io_error.kind() == io::ErrorKind::UnexpectedEof {
-                    return;
-                }
-            }
-        }
         // std::panic::panic_any(e);
         println!("{:?}", e);
     }
