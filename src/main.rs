@@ -35,7 +35,7 @@ enum Commands {
 
         /// Private Key
         #[clap(short, long)]
-        privateKey: Option<String>,
+        key: Option<String>,
     },
 }
 
@@ -83,11 +83,7 @@ impl Cli {
                     println!("生成失败")
                 }
             }
-            Commands::Decode {
-                input,
-                output,
-                privateKey,
-            } => {
+            Commands::Decode { input, output, key } => {
                 let input_path_buf = input.absolutize().unwrap().to_path_buf();
                 let out_path_buf = output.absolutize().unwrap().to_path_buf();
                 println!("input: {:?}", input_path_buf);
@@ -95,7 +91,7 @@ impl Cli {
 
                 if input_path_buf.is_file() {
                     let mut private_key = String::new();
-                    if let Some(key) = privateKey {
+                    if let Some(key) = key {
                         private_key.push_str(key);
                     }
 
@@ -110,7 +106,7 @@ impl Cli {
                         let input_path = PathBuf::from(entry.path());
                         println!("decode: {:?}", input_path);
                         let mut private_key = String::new();
-                        if let Some(key) = privateKey {
+                        if let Some(key) = key {
                             private_key.push_str(key);
                         }
 
