@@ -125,3 +125,6 @@ Cargo.lock
 sample_data/*.log
 test_build_out/
 /micro-uecc-safe/micro-uecc-sys/src/bindings.rs
+
+# vscode
+.vscode/
