@@ -6,7 +6,7 @@ MAC_X86_TARGET=x86_64-apple-darwin
 MAC_ARM64_TARGET=aarch64-apple-darwin
 OUT_NAME=tencent-mars-xlog-util
 
-VERSION="v0.1.2"
+VERSION="v0.1.3"
 CUR_DIR=$PWD
 
 function useage() {
