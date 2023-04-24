@@ -424,11 +424,12 @@ impl Context {
             return Ok(());
         }
         let mut gz = bufread::DeflateDecoder::new(content_buf);
-        let mut s = String::new();
-        if let Err(err) = gz.read_to_string(&mut s) {
+        let mut s = Vec::new();
+        if let Err(err) = gz.read_to_end(&mut s) {
             return Err(anyhow::Error::new(err));
         } else {
-            output_buf_file.appen_str(&s)?;
+            // output_buf_file.appen_str(&String::from_utf8_lossy(&mut s))?;
+            output_buf_file.appen_bytes(&s)?;
         };
 
         Ok(())
