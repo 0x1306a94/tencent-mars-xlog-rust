@@ -8,7 +8,7 @@ OUT_NAME=tencent-mars-xlog-util
 # rustup target add x86_64-pc-windows-gnu
 # brew install mingw-w64
 
-VERSION="v0.1.3"
+VERSION="v0.1.4"
 CUR_DIR=$PWD
 
 function useage() {
