@@ -134,16 +134,12 @@ def DecodeBuffer(_buffer, _offset, _outbuffer):
         return -1
 
     headerLen = 1 + 2 + 1 + 1 + 4 + crypt_key_len
-    pos = _offset+headerLen-4-crypt_key_len
+    pos = _offset + headerLen - 4 - crypt_key_len
     length = struct.unpack_from("I", memoryview(_buffer)[pos:pos+4])[0]
     tmpbuffer = bytearray(length)
 
-    pos = _offset+headerLen-4-crypt_key_len-2-2
+    pos = _offset + headerLen - 4 - crypt_key_len - 2 - 2
     seq = struct.unpack_from("H", memoryview(_buffer)[pos:pos+2])[0]
-    pos = _offset+headerLen-4-crypt_key_len-1-1
-    begin_hour = struct.unpack_from("c", memoryview(_buffer)[pos:pos+1])[0]
-    pos = _offset+headerLen-4-crypt_key_len-1
-    end_hour = struct.unpack_from("c", memoryview(_buffer)[pos:pos+1])[0]
 
     global lastseq
     if seq != 0 and seq != 1 and lastseq != 0 and seq != (lastseq+1):
@@ -153,7 +149,10 @@ def DecodeBuffer(_buffer, _offset, _outbuffer):
     if seq != 0:
         lastseq = seq
 
-    tmpbuffer[:] = _buffer[_offset+headerLen:_offset+headerLen+length]
+    start = _offset + headerLen
+    end = _offset + headerLen + length
+
+    tmpbuffer[:] = _buffer[start:end]
 
     try:
 

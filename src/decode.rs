@@ -150,9 +150,13 @@ impl InputBuffer {
         self.pos = pos
     }
 
-    fn read_range_bytes(&self, pos: usize, len: usize) -> &[u8] {
+    fn bytes_at(&self, pos: usize) -> &[u8] {
+        &self.mmap[pos..]
+    }
+
+    fn range_bytes(&self, pos: usize, len: usize) -> &[u8] {
         if (pos + len) > self.file_len {
-            println!("越界");
+            panic!("越界");
         }
         &self.mmap[pos..pos + len]
     }
@@ -169,6 +173,7 @@ impl OutputBufFile {
             .write(true)
             // .read(true)
             // .append(true)
+            .truncate(true)
             .create(true)
             .open(&path)?;
 
@@ -206,6 +211,10 @@ impl OutputBufFile {
             return Ok(());
         }
     }
+
+    fn flush(&mut self) {
+        self.file.flush();
+    }
 }
 
 impl Context {
@@ -221,22 +230,21 @@ impl Context {
             return Err(anyhow::Error::new(eof));
         }
         let in_buf = input_buf_file.bytes();
-        if !is_good_log_buf(in_buf, in_buf_len, *offset, 1) {
-            let buf_len = in_buf_len - *offset;
-            let bytes = input_buf_file.read_range_bytes(*offset, buf_len);
-            if let Some(pos) = get_log_start_pos(bytes, buf_len, 1) {
+        if !is_good_log_buf(in_buf, *offset, 1) {
+            let bytes = input_buf_file.bytes_at(*offset);
+            if let Some(fixpos) = get_log_start_pos(bytes, 1) {
                 output_buf_file.appen_str(&format!(
                     "[F]decode_log_file.py decode err|| len= {:?}\n",
-                    pos
+                    fixpos
                 ))?;
-                *offset += pos;
+                *offset += fixpos;
             } else {
                 return Err(anyhow::anyhow!("无法获取 log start pos"));
             }
         }
 
         let mut crypt_key_len: usize = 0;
-        let magic_value = input_buf_file.bytes()[0];
+        let magic_value = input_buf_file.bytes_at(*offset)[0];
         if magic::NO_COMPRESS_START == magic_value
             || magic::COMPRESS_START == magic_value
             || magic::COMPRESS_START1 == magic_value
@@ -261,19 +269,13 @@ impl Context {
         }
 
         let header_len = 1 + 2 + 1 + 1 + 4 + crypt_key_len;
-        let start = *offset + header_len - crypt_key_len - 4;
-        let len_bytes = input_buf_file.read_range_bytes(start, 4);
+        let start = *offset + header_len - 4 - crypt_key_len;
+        let len_bytes = input_buf_file.bytes_at(start);
         let length = read_integer::<u32>(len_bytes) as usize;
 
-        let pos = *offset + header_len - crypt_key_len - 4 - 2 - 2;
-        let sqe_bytes = input_buf_file.read_range_bytes(pos, 2);
+        let pos = *offset + header_len - 4 - crypt_key_len - 2 - 2;
+        let sqe_bytes = input_buf_file.bytes_at(pos);
         let seq = read_integer::<i16>(sqe_bytes);
-        // let pos = *offset + header_len - crypt_key_len - 4 - 1 - 1;
-        // let begin_hour = input_buf_file.read_range_bytes(pos, 1)[0];
-        // let pos = *offset + header_len - crypt_key_len - 4 - 1;
-        // let end_hour = input_buf_file.read_range_bytes(pos, 1)[0];
-        // let v = input_buf_file.all_bytes()[*offset] as i32;
-        // let key = (BASE_KEY as i32) ^ (0xff & (seq as i32)) ^ v;
 
         if seq != 0 && seq != 1 && self.last_seq != 0 && seq != (self.last_seq + 1) {
             output_buf_file.appen_str(&format!(
@@ -288,10 +290,9 @@ impl Context {
         }
 
         let pos = *offset + header_len;
-        let len = length;
-        let data = input_buf_file.read_range_bytes(pos, len);
-        let mut content_buf: Vec<u8> = vec![0; len];
-        content_buf.copy_from_slice(data);
+        let data = input_buf_file.range_bytes(pos, length);
+        let mut content_buf: Vec<u8> = Vec::with_capacity(length);
+        content_buf.extend_from_slice(data);
 
         let input_buf = input_buf_file.all_bytes();
         let magic_value = input_buf[*offset];
@@ -303,7 +304,7 @@ impl Context {
                 || magic::SYNC_ZSTD_START == magic_value
                 || magic::SYNC_NO_CRYPT_ZSTD_START == magic_value)
         {
-            output_buf_file.appen_bytes(&content_buf)?;
+            output_buf_file.appen_bytes(data)?;
         } else if !is_crypt
             && (magic::NO_COMPRESS_START1 == magic_value
                 || magic::COMPRESS_START2 == magic_value
@@ -319,7 +320,7 @@ impl Context {
             let mut client_pub_key: Vec<u8> = vec![0; crypt_key_len];
             let pos = *offset + header_len - crypt_key_len;
             let len = crypt_key_len;
-            let data = input_buf_file.read_range_bytes(pos, len);
+            let data = input_buf_file.range_bytes(pos, len);
             client_pub_key.copy_from_slice(data);
 
             let mut svr_priate_key: Vec<u8> = vec![0];
@@ -400,9 +401,10 @@ impl Context {
                 decompress_buf.extend_from_slice(&tmpbuffer[2..single_log_len + 2]);
                 tmpbuffer = &tmpbuffer[single_log_len + 2..];
             }
-
             // zlib
             self.zlib_decompress(output_buf_file, &decompress_buf)?;
+        } else {
+            output_buf_file.appen_bytes(&content_buf)?;
         }
 
         // TODO: 暂时中断
@@ -419,11 +421,20 @@ impl Context {
         }
         let mut gz = bufread::DeflateDecoder::new(content_buf);
         let mut s = Vec::new();
-        if let Err(err) = gz.read_to_end(&mut s) {
-            return Err(anyhow::Error::new(err));
-        } else {
-            output_buf_file.appen_bytes(&s)?;
-        };
+        // if let Err(err) = gz.read_to_end(&mut s) {
+        //     return Err(anyhow::Error::new(err));
+        // } else {
+        //     output_buf_file.appen_bytes(&s)?;
+        // };
+
+        match gz.read_to_end(&mut s) {
+            Ok(_) => {
+                output_buf_file.appen_bytes(&s)?;
+            }
+            Err(err) => {
+                return Err(anyhow::Error::new(err));
+            }
+        }
 
         Ok(())
     }
@@ -462,10 +473,9 @@ impl Context {
     pub fn decode(&mut self) -> anyhow::Result<()> {
         let mut input_buf_file = InputBuffer::new(&self.input)?;
         let in_buf_bytes = input_buf_file.bytes();
-        let in_buf_len = input_buf_file.len();
 
         let mut start_pos: usize = 0;
-        match get_log_start_pos(in_buf_bytes, in_buf_len, 2) {
+        match get_log_start_pos(in_buf_bytes, 2) {
             Some(it) => start_pos = it,
             None => return Err(anyhow::anyhow!("无效 Xlog 文件")),
         };
@@ -490,8 +500,8 @@ impl Context {
     }
 }
 
-fn is_good_log_buf(buf: &[u8], buf_len: usize, offset: usize, count: i8) -> bool {
-    if offset == buf_len {
+fn is_good_log_buf(buf: &[u8], offset: usize, count: i8) -> bool {
+    if offset == buf.len() {
         return true;
     }
     let mut crypt_key_len: usize = 0;
@@ -516,7 +526,7 @@ fn is_good_log_buf(buf: &[u8], buf_len: usize, offset: usize, count: i8) -> bool
     }
 
     let header_len = 1 + 2 + 1 + 1 + 4 + crypt_key_len;
-    if (offset + header_len + 1 + 1) > buf_len {
+    if (offset + header_len + 1 + 1) > buf.len() {
         return false;
     }
 
@@ -524,7 +534,7 @@ fn is_good_log_buf(buf: &[u8], buf_len: usize, offset: usize, count: i8) -> bool
     let end = start + 4;
     let bytes = &buf[start..end];
     let length = read_integer::<u32>(bytes) as usize;
-    if (offset + header_len + length + 1) > buf_len {
+    if (offset + header_len + length + 1) > buf.len() {
         return false;
     }
     if magic::END != buf[offset + header_len + length] {
@@ -533,13 +543,13 @@ fn is_good_log_buf(buf: &[u8], buf_len: usize, offset: usize, count: i8) -> bool
     if count >= 1 {
         return true;
     }
-    return is_good_log_buf(buf, buf_len, offset + header_len + length + 1, count - 1);
+    return is_good_log_buf(buf, offset + header_len + length + 1, count - 1);
 }
 
-fn get_log_start_pos(buf: &[u8], buf_len: usize, count: i8) -> Option<usize> {
+fn get_log_start_pos(buf: &[u8], count: i8) -> Option<usize> {
     let mut offset: usize = 0;
     loop {
-        if offset >= buf_len {
+        if offset >= buf.len() {
             break;
         }
         let magic_value = buf[offset];
@@ -555,7 +565,7 @@ fn get_log_start_pos(buf: &[u8], buf_len: usize, count: i8) -> Option<usize> {
             || magic::ASYNC_ZSTD_START == magic_value
             || magic::ASYNC_NO_CRYPT_ZSTD_START == magic_value
         {
-            if is_good_log_buf(buf, buf_len, offset, count) {
+            if is_good_log_buf(buf, offset, count) {
                 return Some(offset);
             }
         }
