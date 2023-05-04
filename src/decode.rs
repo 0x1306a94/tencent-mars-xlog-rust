@@ -10,8 +10,6 @@ use std::io::Write;
 mod utils {
     use std::{fmt::Write, num::ParseIntError};
 
-    use micro_uecc_safe;
-
     pub fn decode_hex(s: &str) -> Result<Vec<u8>, ParseIntError> {
         (0..s.len())
             .step_by(2)
@@ -394,21 +392,17 @@ impl Context {
             // zlib
             self.zlib_decompress(output_buf_file, &content_buf)?;
         } else if magic::COMPRESS_START1 == magic_value {
-            if content_buf.len() > 0 {
-                let mut decompress_buf: Vec<u8> = Vec::with_capacity(1024);
-                let mut pos = 0;
-                let content_buf_len = content_buf.len();
-                while pos < content_buf_len {
-                    let single_log_len = read_integer::<u16>(&content_buf[pos..pos + 2]) as usize;
-                    pos += 2;
-                    let end = pos + single_log_len + 2;
-                    let rang_bytes = &content_buf[pos..end];
-                    pos = end;
-                    decompress_buf.extend_from_slice(rang_bytes);
-                }
-                // zlib
-                self.zlib_decompress(output_buf_file, &decompress_buf)?;
+            let mut decompress_buf: Vec<u8> = Vec::with_capacity(1024);
+
+            let mut tmpbuffer = &content_buf[0..];
+            while tmpbuffer.len() > 0 {
+                let single_log_len = read_integer::<u16>(&tmpbuffer[0..2]) as usize;
+                decompress_buf.extend_from_slice(&tmpbuffer[2..single_log_len + 2]);
+                tmpbuffer = &tmpbuffer[single_log_len + 2..];
             }
+
+            // zlib
+            self.zlib_decompress(output_buf_file, &decompress_buf)?;
         }
 
         // TODO: 暂时中断
@@ -428,7 +422,6 @@ impl Context {
         if let Err(err) = gz.read_to_end(&mut s) {
             return Err(anyhow::Error::new(err));
         } else {
-            // output_buf_file.appen_str(&String::from_utf8_lossy(&mut s))?;
             output_buf_file.appen_bytes(&s)?;
         };
 

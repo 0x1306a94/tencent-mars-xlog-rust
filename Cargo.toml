@@ -1,6 +1,6 @@
 [package]
 name = "tencent-mars-xlog"
-version = "0.1.3"
+version = "0.1.4"
 authors = ["0x1306a94 <0x1306a94@gmail.com>"]
 edition = "2018"
 
